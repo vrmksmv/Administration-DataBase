@@ -1,0 +1,142 @@
+--Создайте табличное пространство для постоянных со следующими параметрами 
+--- имя: TS_XXX;  
+--- имя файла: TS_XXX;   
+--- начальный размер: 7М;  
+--- автоматическое приращение: 5М;  
+--- максимальный размер: 20М. */
+
+create tablespace TS_MVV  
+datafile 'C:\2 Laba\ts_MVV.dbf'  
+size 7 m  
+autoextend on next 5 m  
+maxsize 20 m  
+extent management local;  
+ 
+--drop tablespace TS_MVV; 
+
+--Создайте табличное пространство для временных со следующими параметрами
+--имя: TS_XXX_TEMP;  
+-- имя файла: TS_XXX_TEMP;   
+-- начальный размер: 5М;  
+-- автоматическое приращение: 3М;  
+-- максимальный размер: 30М.  
+
+create temporary tablespace TS_MVV_TEMP  
+tempfile 'C:\2 Laba\TS_MVV_TEMP.dbf'  
+size 5 m  
+autoextend on next 3 m  
+maxsize 30 m  
+extent management local;
+
+
+----Получите список всех табличных пространств,  
+--списки всех файлов с помощью select-запроса к словарю.
+
+select FILE_NAME, TABLESPACE_NAME FROM DBA_DATA_FILES;  
+
+--Создайте роль с именем RL_XXXCORE. Назначьте ей следующие системные привилегии:  
+--разрешение на соединение с сервером;  
+--разрешение создавать и удалять таблицы, представления, процедуры и функции.  
+  
+alter session set "_ORACLE_SCRIPT"=true;  
+create role RL_MVVCORE; 
+
+grant create session,  
+delete any TABLE,  
+create table,  
+create view, 
+drop any view, 
+drop any procedure, 
+create procedure to RL_MVVCORE;
+
+
+--Найдите с помощью select-запроса роль в словаре.   
+--Найдите с помощью select-запроса все системные привилегии, назначенные роли.   
+  
+  
+select * from dba_roles where role = 'RL_MVVCORE';  
+select * from DBA_SYS_PRIVS where grantee = 'RL_MVVCORE';  
+
+
+--Создайте профиль безопасности с именем PF_XXXCORE,  
+--имеющий опции, аналогичные примеру из лекции.
+
+  
+CREATE PROFILE PFEACORE LIMIT  
+PASSWORD_LIFE_TIME 180 --количество дней жизни пароля  
+SESSIONS_PER_USER 3--количесво сессий для пользователя  
+FAILED_LOGIN_ATTEMPTS 7--количество попыток входа  
+PASSWORD_LOCK_TIME 1--количесво дней блокировки после ошибок  
+PASSWORD_REUSE_TIME 10--через сколько дней можно повторить пароль  
+PASSWORD_GRACE_TIME DEFAULT--количество дней предупреждений о смене  
+CONNECT_TIME 180-- время соединения минут  
+IDLE_TIME 30--количество минут простоя  
+  
+
+--Получите список всех профилей БД.  
+--Получите значения всех параметров профиля PF_XXXCORE.  
+--Получите значения всех параметров профиля DEFAULT.  
+  
+select * from dba_profiles;  
+select * from dba_profiles where profile = 'PFEACORE';  
+select * from dba_profiles where profile = 'DEFAULT';  
+
+
+--Создайте пользователя с именем XXXCORE со следующими параметрами:  
+--- табличное пространство по умолчанию: TS_XXX;  
+--- табличное пространство для временных данных: TS_XXX_TEMP;  
+--- профиль безопасности PF_XXXCORE;  
+--- учетная запись разблокирована;  
+--- срок действия пароля истек.  
+
+create user NEWCORE identified by tyt10tyt11
+default tablespace TS_MVV quota unlimited on TS_MVV  
+temporary tablespace TS_MVV_TEMP  
+profile PFEACORE  
+account unlock  
+password expire  
+  
+grant RL_MVVCORE to NEWCORE;
+
+
+
+--SELECT  * FROM  dba_users ;
+
+--Создайте любую таблицу или предсталение
+
+CREATE TABLE TB_Lab_VMM(x number(10), PRIMARY KEY(x), s varchar2(50));
+CREATE VIEW VM_Lab_VMM AS SELECT x, s FROM TB_Lab_VMM;
+
+
+
+
+---Создайте табличное пространство с именем XXX_QDATA (10m)
+---При создании устаноите его в состояние offline
+---Затем переведите табличное пространство в состояние online
+---Выделите пользователю XXX квоту 2m в пространстве XXX_QDATA
+---От имени пользоателя XXX создайте таблицу в пространстве XXX_T1
+---В таблицу добавьте 3 строки
+
+alter session set "_ORACLE_SCRIPT"=true;  
+
+grant create tablespace to NEWCORE; 
+grant alter tablespace to NEWCORE; 
+grant insert tablespace to NEWCORE; 
+
+CREATE TABLESPACE MVV_QDATA
+DATAFILE 'C:\2 Laba\MVV_QDATA.dbf'
+SIZE 10 M
+OFFLINE;
+
+SELECT TABLESPACE_NAME, FILE_NAME FROM DBA_DATA_FILES; 
+
+
+ALTER TABLESPACE MVV_QDATA ONLINE; 
+CREATE TABLE MVV_T1(x number(10),  s varchar2(20)) TABLESPACE MVV_QDATA;
+--DROP TABLE MVV_T1 ;
+INSERT INTO MVV_T1 VALUES(10,'A'); 
+INSERT INTO MVV_T1 VALUES(20,'B'); 
+INSERT INTO MVV_T1 VALUES(30,'C'); 
+ 
+SELECT * FROM MVV_T1;
+ 

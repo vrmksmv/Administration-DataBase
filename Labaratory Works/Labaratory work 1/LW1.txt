@@ -1,0 +1,50 @@
+--create table MVV_t (x number (3) primery key, s varchar(50));
+
+
+
+INSERT into MVV_t VALUES (1, 'A');
+INSERT into MVV_t VALUES (2, 'B');
+INSERT into MVV_t VALUES (3, 'C');
+
+--commit;
+
+
+
+
+update  MVV_t
+set x = 4, s = 'D'
+where x = 1; 
+
+
+SELECT x ,s from MVV_t;
+
+commit;
+
+
+SELECT min(x) FROM MVV_t WHERE s = 'D'; 
+
+
+DELETE FROM MVV_t where s = 'D';
+
+
+alter table MVV_t add constraint pk_constraint primary key(x);
+create table MVV_t1 (x number (3), s varchar(50), constraint fk_column foreign key (x) references MVV_t (x));
+
+
+
+insert into MVV_t values (4, 'C');
+insert into MVV_t values (2, 'B');
+
+
+select * from MVV_t right join MVV_t1 on MVV_t.x = MVV_t1.x
+
+select * from MVV_t1 right join MVV_t on MVV_t.x = MVV_t1.x
+
+
+select * from MVV_t left join MVV_t1 on MVV_t.x = MVV_t1.x
+
+
+select * from MVV_t inner join  MVV_t1 on MVV_t.x = MVV_t1.x
+
+
+--drop table MVV_t, MVV_t1;

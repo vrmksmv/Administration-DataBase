@@ -1,0 +1,288 @@
+/*Почистить все до конца*/
+
+--1.задание
+--Получите список всех существующих PDB в рамках экземпляра ORA12W.
+--Определите их текущее состояние. 
+
+select * from dba_pdbs; 
+
+commit;
+alter session set container = cdb$root;
+
+--commit;
+
+--2. задание
+--Выполните запрос к ORA12W, позволяющий получить перечень экземпляров. 
+
+/*select * from v$session; 
+
+commit;*/
+
+--3. задание
+--Выполните запрос к ORA12W, позволяющий получить перечень 
+--установленных компонентов СУБД Oracle 12c и их версии и статус.  
+
+/*select comp_name, version from dba_registry where status = 'VALID'; 
+
+commit;*/
+
+--4. задание
+--Создайте собственный экземпляр PDB (необходимо подключиться к серверу с серверного
+--компьютера 
+--и используйте Database Configuration Assistant) с именем XXX_PDB, где XXX – инициалы студента. 
+
+
+--win + R + dbca
+--1) Database operation > Manage Plaggable databases
+--2) Manage Plaggable databases > Create plaggable database
+--3) Select darabase > Пароль админа и имя админа
+--4) Create pluggable db > Create a new pluggable db
+--5) PDB identification -> (Pluggable database name MVV_PDB_ADMIN_NEW\\
+-- Administration user name: PDB_ADMIN_NEW\\ Administration password Qwerty123 )
+--6) Pluggable Db options > Next
+--7) Summary > OK
+--8) Finish -> OK
+
+
+--5. задание
+--Получите список всех существующих PDB в рамках экземпляра
+--ORA12W. Убедитесь, что созданная PDB-база данных существует.
+
+
+
+--system
+--tyt10tyt11
+--connect /as sysdba
+--show pdbs
+
+--alter session set container = cdb$root;
+
+
+--6.задание 
+--Подключитесь к XXX_PDB c помощью SQL Developer создайте инфраструктурные объекты  
+--(табличные пространства, роль, профиль безопасности, пользователя с именем U1_XXX_PDB). 
+
+--Создаем новое подключение
+--NAME Laba4
+--USERNAME PDB_ADMIN_NEW
+--Qwerty123
+--Подключить сверху
+--Servise name MVV_PDB_ADMIN_NEW
+
+-------------
+
+--Выдать привилегии
+--user-name: system
+--password: 
+-- connect system/Qwerty123@//localhost:1521/MVV_PDB_ADMIN_NEW as sysdba;
+
+
+---------------------------
+
+--действия в sql
+
+create tablespace MVV_TABLESPACE_New  
+datafile 'C:/4 Laba/MVV_TABLESPACE_New.dbf' 
+size 5m 
+autoextend on next 5m 
+maxsize 20m; 
+ 
+create role MVV_ROLE_new_Role;  
+grant create session, create table, create view, create procedure to  MVV_ROLE_new_Role; 
+ 
+create profile MVV_PROFILE_NEW limit 
+password_life_time 20 
+sessions_per_user 5 
+failed_login_attempts 8 
+password_lock_time 8 
+password_reuse_time 8 
+password_grace_time default 
+connect_time 180 
+idle_time 30; 
+ 
+ 
+create user U1_MVV_PDB identified by 1234 
+default tablespace  MVV_TABLESPACE_New  quota unlimited on  MVV_TABLESPACE_New  
+profile MVV_PROFILE_NEW 
+account unlock ;
+
+grant MVV_ROLE_new_Role to U1_MVV_PDB; 
+
+commit;
+
+
+
+
+--7. задание
+--Подключитесь к пользователю U1_XXX_PDB, с помощью SQL Developer, 
+--создайте таблицу XXX_table, добавьте в нее строки, выполните SELECT-запрос к таблице. 
+ 
+ 
+ 
+ --нажать плюс
+ --NAME: Laba 4.2
+ --USERNAME: U1_MVV_PDB
+ --PASSWORD 1234
+ --SERVICE NAME MVV_PDB_ADMIN_NEW
+ 
+ --ПЕРЕХОДИМ В DEV
+ 
+SELECT * from user_tables;
+ 
+create table MVV_TABLE (number_ int, str NVARCHAR2(50)); 
+insert into MVV_TABLE values (1, 'A'); 
+insert into MVV_TABLE values (2, 'B'); 
+ 
+select * from MVV_TABLE;
+
+commit;
+
+--8. задание
+--С помощью представлений словаря базы данных определите, все табличные пространства, 
+--все  файлы (перманентные и временные),  
+--все роли (и выданные им привилегии), профили безопасности,
+--всех пользователей  базы данных XXX_PDB и  назначенные им роли.
+
+--имена всех ... словаря
+--структура
+--все
+
+select * from dictionary where lower(COMMENTS) like '%role%'; --роль
+describe DBA_ROLES;
+SELECT * FROM DBA_ROLES;
+
+
+select * from dba_DATA_FILES; --файлы
+select * from dba_temp_files;
+
+select * from dictionary where lower(COMMENTS) LIKE '%priv%';--привилегии
+describe ROLE_SYS_PRIVS;--структура
+select * FROM ROLE_SYS_PRIVS where ROLE like '%MVV%'; --MVV-PDB_USER прив роли
+
+
+select * from DBA_USERS;-- пользователи
+select * from dictionary where lower(COMMENTS) LIKE '%users%';
+
+
+select * from dba_tablespaces;-- все пространства
+
+select * from dictionary where lower(COMMENTS) LIKE '%prof%'; -- безоапсность
+
+
+
+
+
+--  9.задание
+-- Подключитесь к CDB - Базе данных, создайте общего пользователя
+-- с именем C##XXX Назначтте ему привилегию, позволяющую подключиться к бд XXX_PDB.
+--Создайте 2 подключения пользователя C##XXX в SQL Developer к CDB - базе данных
+-- и XXX PDB -- базе данных . Проверьте работоспособность.
+
+
+alter session set container = MVV_PDB_ADMIN_NEW; -- переключиться на PDB
+alter session set container = CDB$ROOT; -- переключиться на CDB
+SELECT SYS_CONTEXT('USERENV', 'CON_NAME') FROM DUAL; -- посмотреть где я
+
+--СНАЧАДА ROOT
+
+CREATE user C##MVV identified by 5678
+account unlock;
+
+DROP user C#MVV;
+
+grant create session to C##MVV; -- через SQL PLUS
+
+SELECT * FROM ALL_USERS;
+
+
+
+
+
+
+
+--  10.задание
+--Назначте привилегию, разрешающую подключение к XXX_PDB общему
+--пользователю С##YYY? Созданному другим студентом. Убедитесь в
+--Работоспособности этого пользователя в базе данных XXX_PDB;
+
+
+--create tablespace TEST10_TABLESPACE  
+--datafile 'C:/4 Laba/TEST10_TABLESPACE.dbf' 
+--size 5m 
+--autoextend on next 5m 
+--maxsize 20m; 
+-- 
+--create role TEST10_ROLE;  
+--grant create session, create table, create view, create procedure to TEST10_ROLE; 
+-- 
+--create profile TEST10_PROFILE limit 
+--password_life_time 20 
+--sessions_per_user 5 
+--failed_login_attempts 8 
+--password_lock_time 8 
+--password_reuse_time 8 
+--password_grace_time default 
+--connect_time 180 
+--idle_time 30; 
+-- 
+-- 
+------------------------------------------------------- 
+-- 
+--create user TEST10_user identified by 8844
+--default tablespace MVV_TABLESPACE quota unlimited on TEST10_TABLESPACE 
+--profile TEST10_PROFILE 
+--account unlock;
+--
+--grant TEST10_ROLE to TEST10_user; 
+
+
+
+/*
+Enter user-name: system
+Enter password:
+Last Successful login time: Mon Oct 03 2022 18:19:58 +03:00
+
+Connected to:
+Oracle Database 18c Express Edition Release 18.0.0.0.0 - Production
+Version 18.4.0.0.0
+
+
+
+SQL> connect /as sysdba;
+Connected.
+SQL> connect system/Qwerty123@//localhost:1521/MVV_PDB as sysdba;
+Connected.
+SQL>
+SQL> grant create session to TEST10_user;
+*/
+
+
+
+--11 Задание 
+--Подключитесь к пользователю U1_XXX_PDB со своего компьютера,
+--а к пользователям C#XXX И C##YYY c другого (к XXX_PDB базе данных). На своем компьютере 
+-- получите список всех текущих пдключений к CDB (найдите в списке созданные вами подключения)
+
+------
+
+--12. задание 
+--продемонстрируйте преподавателю, работоспособную PDB -базу данных и созданную инфраструктуру 
+--(результаты всех запросов). Покажите файлы PDB- базы данных (на серверном компьютере)
+
+----
+
+--13 задание
+-- удалите созданную базу данных XXX_DB/ 
+--убедитесь что все файлы PDB базы данных удалены 
+--удалите пользователя C##XXX/ Удалите в SQL DEVELOPER все 
+-- подключения к XXX_PDB.
+
+
+--alter session set container = cdb$root;
+--drop pluggable database MVV_PDB including datafiles;
+
+
+
+
+
+
